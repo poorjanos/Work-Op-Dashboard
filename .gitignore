@@ -1,6 +1,7 @@
 # Output files (csv, html)
 .csv
 .html
+scriptLog
 
 # History files
 .Rhistory

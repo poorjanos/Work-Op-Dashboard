@@ -1,0 +1,324 @@
+---
+title: "Operatív napi monitoring"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+---
+
+Függõ ajánlat
+===================================== 
+    
+Row 
+-------------------------------------
+
+### Függõ ajánlat darabszám
+
+```{r}
+status_main <- read.csv(here::here("Data", "fuggo_status_main.csv"))
+flexdashboard::valueBox(status_main$DARAB, icon = "fa-bar-chart")
+```
+
+### Függõ ajánlat érkezéstõl eltelt munkanap átlag
+
+```{r}
+status_main <- read.csv(here::here("Data", "fuggo_status_main.csv"))
+flexdashboard::valueBox(status_main$ELTELT_MNAP_ATL, icon = "fa-exclamation")
+```
+
+
+### Függõ ajánlat érkezéstõl eltelt munkanap medián
+
+```{r}
+status_main <- read.csv(here::here("Data", "fuggo_status_main.csv"))
+flexdashboard::valueBox(status_main$ELTELT_MNAP_MED, icon = "fa-balance-scale")
+```
+
+Row 
+-------------------------------------
+
+### Függõ ajánlat termékcsoport (darabszám és eltelt munkanap)
+
+```{r}
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(lubridate)
+termek <- read.csv(here::here("Data", "fuggo_termek.csv"))
+
+ggplot(termek, aes(x=TERMCSOP, y=ÉRTÉK, label = ÉRTÉK)) +
+  geom_bar(stat = "identity", fill = "#00BFC4") +
+  facet_grid(MUTATÓ~., scales = "free") +
+  labs(y = "Érkezéstõl eltelt mnap és Darabszám",
+       x = "Termékcsoport") +
+  geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold")
+```
+
+
+### Függõ ajánlat termékcsoport/státusz (darabszám és eltelt munkanap)
+
+```{r}
+library(ggplot2)
+status <- read.csv(here::here("Data", "fuggo_status.csv"))
+
+ggplot(status, aes(x=KECS_PG, y=ÉRTÉK, label = ÉRTÉK)) +
+  geom_bar(stat = "identity", fill = "#00BFC4") +
+  facet_grid(MUTATÓ~TERMCSOP, scales = "free") +
+  labs(y = "Érkezéstõl eltelt mnap és Darabszám",
+       x = "Státusz") +
+  geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+
+Függõ ajánlat státuszok
+===================================== 
+    
+Row 
+-------------------------------------
+
+### Folyamatban darabszám
+
+```{r}
+status_kecs_main <- read.csv(here::here("Data", "fuggo_status_kecs_main.csv"))
+flexdashboard::valueBox(status_kecs_main[status_kecs_main$KECS_PG == "Folyamatban", "DARAB"], icon = "fa-bar-chart")
+```
+
+### Folyamatban eltelt munkanap átlag
+
+```{r}
+status_kecs_main <- read.csv(here::here("Data", "fuggo_status_kecs_main.csv"))
+flexdashboard::valueBox(status_kecs_main[status_kecs_main$KECS_PG == "Folyamatban", "ELTELT_MNAP"], icon = "fa-exclamation")
+```
+
+
+### Várakozó darabszám
+
+```{r}
+status_kecs_main <- read.csv(here::here("Data", "fuggo_status_kecs_main.csv"))
+flexdashboard::valueBox(status_kecs_main[status_kecs_main$KECS_PG == "Várakozó", "DARAB"], icon = "fa-bar-chart")
+```
+
+### Várakozó eltelt munkanap átlag
+
+```{r}
+status_kecs_main <- read.csv(here::here("Data", "fuggo_status_kecs_main.csv"))
+flexdashboard::valueBox(status_kecs_main[status_kecs_main$KECS_PG == "Várakozó", "ELTELT_MNAP"], icon = "fa-exclamation")
+```
+
+Row 
+-------------------------------------
+
+### Folyamatban okok (darabszám és eltelt munkanap)
+
+```{r}
+library(ggplot2)
+status_foly <- read.csv(here::here("Data", "fuggo_status_foly.csv"))
+
+ggplot(status_foly[!status_foly$TERMCSOP %in% c("GÉPK", "TLP"), ], aes(x=KECS, y=ÉRTÉK, label = ÉRTÉK)) +
+  geom_bar(stat = "identity", fill = "#00BFC4") +
+  facet_grid(TERMCSOP~MUTATÓ, scales = "free") +
+  labs(y = "Darabszám és Érkezéstõl eltelt mnap",
+       x = "Folyamatban okok") +
+  theme(axis.text.y = element_text(size = 8)) +
+  geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") +
+  coord_flip()
+```
+
+
+### Várakozó okok (darabszám és eltelt munkanap)
+
+```{r}
+library(ggplot2)
+status_varak <- read.csv(here::here("Data", "fuggo_status_varak.csv"))
+
+ggplot(status_varak[!status_varak$TERMCSOP %in% c("GÉPK", "TLP"), ], aes(x=KECS, y=ÉRTÉK, label = ÉRTÉK)) +
+  geom_bar(stat = "identity", fill = "#00BFC4") +
+  facet_grid(TERMCSOP~MUTATÓ, scales = "free") +
+  labs(y = "Darabszám és Érkezéstõl eltelt mnap",
+       x = "Várakozó okok") +
+  theme(axis.text.y = element_text(size = 7)) +
+  geom_text(size = 2, position = position_stack(vjust = 0.5), fontface = "bold") +
+  coord_flip()
+```
+
+
+Függõ ajánlat trend
+===================================== 
+    
+Row 
+-------------------------------------
+
+### Függõ ajánlat trend
+
+```{r}
+library(ggplot2)
+fuggo_hist <- read.csv(here::here("Data", "fuggo_hist.csv"))
+
+ggplot(fuggo_hist, aes(x = DATUM, y = DARAB, fill = KECS_PG, label = DARAB)) +
+  geom_bar(stat = "identity") +
+  geom_text(size = 1.8, position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+  theme(axis.text.x = element_text(angle = 90, size = 5)) +
+  labs(y = "Függõ darabszám",
+       x = "Hónap napja",
+       fill = "Státusz")
+```
+
+
+### Függõ ajánlat trend termékcsoportonként
+
+```{r}
+library(ggplot2)
+fuggo_hist_term <- read.csv(here::here("Data", "fuggo_hist_term.csv"))
+
+ggplot(fuggo_hist_term[!fuggo_hist_term$TERMCSOP %in% c("GÉPK", "TLP"), ], aes(x = DATUM, y = DARAB, fill = KECS_PG, label = DARAB)) +
+  geom_bar(stat = "identity") +
+  #geom_text(size = 2, position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+  theme(axis.text.x = element_text(angle = 90, size = 5)) +
+  labs(y = "Függõ darabszám",
+       x = "Hónap napja",
+       fill = "Státusz") +
+  facet_grid(TERMCSOP~.)
+```
+
+
+
+
+Forgalom
+===================================== 
+    
+Row{.tabset .tabset-fade}
+-------------------------------------
+
+### Napi forgalom
+
+```{r fig.width=18, fig.height=9}
+forg <- read.csv(here::here("Data", "forg.csv"))
+
+ggplot(forg, aes(x = NAP, y = DARAB, fill = KOTVENYESITES, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          strip.text.x = element_text(size = 12)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Feldolgozási ág") +
+    #theme(legend.position = c(0.1, 0.9)) +
+    facet_grid(. ~ TIPUS)
+```
+
+
+### Napi forgalom termékenként
+
+```{r fig.width=24, fig.height=10}
+forg_term <- read.csv(here::here("Data", "forg_term.csv"))
+
+ggplot(forg_term[forg_term$F_TERMCSOP %in% c("CASCO", "LAK", "GÉP", "ÉLET"), ], aes(x = NAP, y = DARAB, fill = KOTVENYESITES, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(size = 4, position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          strip.text.x = element_text(size = 12)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Feldolgozási ág") +
+    #theme(legend.position = c(0.1, 0.9)) +
+    facet_grid(F_TERMCSOP ~ TIPUS, scales = "free")
+```
+
+
+
+
+
+
+Forgalom/státusz
+===================================== 
+    
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Adott napon érkezett állomány jelenlegi státusza
+
+```{r fig.width=18, fig.height=9}
+workout <- read.csv(here::here("Data", "workout.csv"))
+
+ggplot(workout, aes(x = NAP, y = DARAB, fill = F_KECS_PG, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(size = 4, position = position_stack(vjust = 0.5), angle = 0, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          strip.text.y = element_text(size = 12)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Státusz")
+```
+
+
+### Adott napon érkezett állomány jelenlegi státusza termékenként
+
+```{r fig.width=24, fig.height=10}
+workout_term <- read.csv(here::here("Data", "workout_term.csv"))
+
+ggplot(workout_term[workout_term$F_TERMCSOP %in% c("CASCO", "LAK", "GÉP", "ÉLET"), ], aes(x = NAP, y = DARAB, fill = F_KECS_PG, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(size = 4, position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Státusz") +
+  facet_grid(.~F_TERMCSOP, scales = "free")
+```
+
+Hatékonyság mutatók
+=====================================     
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+###Érintés-menesztés termékcsoportonként
+```{r fig.width=14, fig.height=7}
+touch_close <- read.csv(here::here("Data", "touch_close.csv"))
+library(tidyr)
+
+tchClose <- gather(touch_close[,-4], DB_DIM, DB, 3:4)
+  tchClose$NAP <- as.character(tchClose$NAP)
+  ggplot(tchClose[!tchClose$F_TERMCSOP %in% c("TLP", "GÉPK"),], aes(x = NAP, y = DB, group = DB_DIM, colour = DB_DIM)) +
+    geom_line() +
+    geom_point() +
+    theme(axis.text.x = element_text(angle = 90)) +
+  facet_grid(.~F_TERMCSOP, scales = "free")
+    
+```
+
+###Üzemhatékonyság (menesztés/munkaóra)
+```{r fig.width=14, fig.height=7}
+touch_close <- read.csv(here::here("Data", "touch_close.csv"))
+
+touch_close$MEN_MUNKAORA <-  touch_close$MENESZTETT_DB/touch_close$MUNKA_ORA
+  touch_close <- touch_close[is.na(touch_close$MEN_MUNKAORA) == FALSE,]
+  #tchFull <- tchFull[tchFull$MEN_MUNKAORA > 0 & is.na(tchFull$MEN_MUNKAORA) == FALSE,]
+  touch_close$NAP <- as.character(touch_close$NAP) 
+  ggplot(touch_close[!touch_close$F_TERMCSOP %in% c("TLP", "GÉPK"),], aes(x = NAP, y = MEN_MUNKAORA, group = 1)) +
+    geom_line(colour="blue") +
+    geom_point(colour="blue") +
+    theme(axis.text.x = element_text(angle = 90)) +
+    facet_grid(.~F_TERMCSOP, scales = "free")
+```
+
+###Ciklusidõk (napi medián)
+```{r fig.width=14, fig.height=7}
+ctime <- read.csv(here::here("Data", "ctime.csv"))
+
+library(scales)  
+ctime$NAP = as.Date(ctime$NAP)
+ ggplot(ctime, aes(x = NAP, y = MEDIAN, group = 1)) +
+    geom_line(colour="blue") +
+    geom_point(colour="blue") +
+    scale_x_date(breaks = pretty_breaks(10)) +
+    theme(axis.text.x = element_text(angle = 90, size = 8)) +
+    facet_wrap(~ TEVEKENYSEG, ncol = 8, labeller=label_wrap_gen(width=0.1), scales = "free")
+```
+
+
