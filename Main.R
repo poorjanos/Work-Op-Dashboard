@@ -13,7 +13,13 @@ library(tidyr)
 # Data Extraction #######################################################################
 #########################################################################################
 
-if (!weekdays(Sys.Date()) %in% c("szombat", "vasárnap")) {
+if (strftime(Sys.Date(),'%u') != 6 | strftime(Sys.Date(),'%u') != 7) {
+  
+  # Create dirs (dir.create() does not crash when dir already exists)
+  dir.create(here::here("Data"), showWarnings = FALSE)
+  dir.create(here::here("Reports"), showWarnings = FALSE)
+  dir.create(here::here("SQL"), showWarnings = FALSE)
+  
   #Connect to Oracle (Kont@kt:MMBDBIKON)
   # Set JAVA_HOME, set max. memory, and load rJava library
   Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_60")
