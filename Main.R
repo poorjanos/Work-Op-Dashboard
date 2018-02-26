@@ -13,7 +13,7 @@ library(tidyr)
 # Data Extraction #######################################################################
 #########################################################################################
 
-if (strftime(Sys.Date(),'%u') != 6 | strftime(Sys.Date(),'%u') != 7) {
+if (!(strftime(Sys.Date(),'%u') == 6 | strftime(Sys.Date(),'%u') == 7)) {
   
   # Create dirs (dir.create() does not crash when dir already exists)
   dir.create(here::here("Data"), showWarnings = FALSE)
