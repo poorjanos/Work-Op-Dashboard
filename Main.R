@@ -89,7 +89,7 @@ dbDisconnect(jdbcConnection)
 #########################################################################################
 
 # Select for day
-t_fuggo[t_fuggo$KECS_PG == "Feldolgozandó", "KECS_PG"] <-
+t_fuggo[t_fuggo$KECS_PG %in% c("Feldolgozandó", "Feldogozandó"), "KECS_PG"] <-
   "Folyamatban"
 
 # Page 1: main
@@ -182,7 +182,7 @@ write.csv(
 
 
 # Time series
-t_fuggo_history[t_fuggo_history$KECS_PG == "Feldolgozandó", "KECS_PG"] <-
+t_fuggo_history[t_fuggo_history$KECS_PG %in% c("Feldolgozandó", "Feldogozandó"), "KECS_PG"] <-
   "Folyamatban"
 t_fuggo_history$DATUM <-
   as.character(floor_date(ymd_hms(t_fuggo_history$LEVALOGATVA), "day"))
@@ -271,7 +271,7 @@ write.csv(
 workout <-
   group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT",]), NAP, F_KECS_PG) %>%
   summarize(DARAB = sum(DARAB))
-workout[workout$F_KECS_PG == 'Feldolgozandó', "F_KECS_PG"] <-
+workout[workout$F_KECS_PG %in% c('Feldolgozandó', "Feldogozandó"), "F_KECS_PG"] <-
   "Folyamatban"
 
 write.csv(
@@ -284,7 +284,7 @@ write.csv(
 workout_term <-
   group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT",]), NAP, F_TERMCSOP, F_KECS_PG) %>%
   summarize(DARAB = sum(DARAB))
-workout_term[workout_term$F_KECS_PG == 'Feldolgozandó', "F_KECS_PG"] <-
+workout_term[workout_term$F_KECS_PG %in% c('Feldolgozandó', "Feldogozandó"), "F_KECS_PG"] <-
   "Folyamatban"
 
 write.csv(
