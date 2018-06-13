@@ -228,7 +228,42 @@ ggplot(forg_term[forg_term$F_TERMCSOP %in% c("CASCO", "LAK", "GÉP", "ÉLET"), ], 
 ```
 
 
+### Heti forgalom
 
+```{r fig.width=18, fig.height=9}
+forg <- read.csv(here::here("Data", "forg_weekly.csv"))
+
+ggplot(forg, aes(x = HET, y = DARAB, fill = KOTVENYESITES, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          strip.text.x = element_text(size = 12)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Feldolgozási ág") +
+    #theme(legend.position = c(0.1, 0.9)) +
+    facet_grid(. ~ TIPUS)
+```
+
+
+### Heti forgalom termékenként
+
+```{r fig.width=24, fig.height=10}
+forg_term <- read.csv(here::here("Data", "forg_term_weekly.csv"))
+
+ggplot(forg_term[forg_term$F_TERMCSOP %in% c("CASCO", "LAK", "GÉP", "ÉLET"), ], aes(x = HET, y = DARAB, fill = KOTVENYESITES, label = DARAB)) +
+    geom_bar(stat = "identity") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    geom_text(size = 4, position = position_stack(vjust = 0.5), angle = 90, fontface = "bold") +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          strip.text.x = element_text(size = 12)) +
+    labs(y = "Darabszám",
+       x = "Dátum",
+       fill = "Feldolgozási ág") +
+    #theme(legend.position = c(0.1, 0.9)) +
+    facet_grid(F_TERMCSOP ~ TIPUS, scales = "free")
+```
 
 
 

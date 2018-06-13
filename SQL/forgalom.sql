@@ -10,7 +10,7 @@
                            f_kecs,
                            COUNT (f_ivk) AS darab
                            FROM   kontakt.t_ajanlat_attrib
-                           WHERE   f_erkezes BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'ddd'), -1)
+                           WHERE   f_erkezes BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'mm'), -6)
                            AND  TRUNC (SYSDATE, 'ddd')
                            AND f_erkezes IS NOT NULL
                            AND f_kecs_pg IS NOT NULL
@@ -36,9 +36,9 @@
                            f_kecs,
                            COUNT (f_ivk) AS darab
                            FROM   kontakt.t_ajanlat_attrib
-                           WHERE   f_erkezes BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'mm'), -4)
+                           WHERE   f_erkezes BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'mm'), -10)
                            AND  TRUNC (SYSDATE, 'ddd')
-                           AND f_lezaras BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'ddd'), -1)
+                           AND f_lezaras BETWEEN ADD_MONTHS (TRUNC (SYSDATE, 'mm'), -6)
                            AND  TRUNC (SYSDATE, 'ddd')
                            AND f_erkezes IS NOT NULL
                            AND f_lezaras IS NOT NULL

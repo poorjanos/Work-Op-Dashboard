@@ -11,7 +11,7 @@ library(tidyr)
 
 
 # Quit if sysdate == weekend ------------------------------------------------------------
-stopifnot(!(strftime(Sys.Date(),'%u') == 6 | strftime(Sys.Date(),'%u') == 7))
+stopifnot(!(strftime(Sys.Date(), "%u") == 6 | strftime(Sys.Date(), "%u") == 7))
 
 #########################################################################################
 # Data Extraction #######################################################################
@@ -22,7 +22,7 @@ dir.create(here::here("Data"), showWarnings = FALSE)
 dir.create(here::here("Reports"), showWarnings = FALSE)
 dir.create(here::here("SQL"), showWarnings = FALSE)
 
-#Connect to Oracle (Kont@kt:MMBDBIKON)
+# Connect to Oracle (Kont@kt:MMBDBIKON)
 # Set JAVA_HOME, set max. memory, and load rJava library
 Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_171")
 options(java.parameters = "-Xmx2g")
@@ -37,13 +37,16 @@ library(RJDBC)
 
 # Create connection driver and open connection
 jdbcDriver <-
-  JDBC(driverClass = "oracle.jdbc.OracleDriver",
-       classPath = "C:\\Users\\PoorJ\\Desktop\\ojdbc7.jar")
+  JDBC(
+    driverClass = "oracle.jdbc.OracleDriver",
+    classPath = "C:\\Users\\PoorJ\\Desktop\\ojdbc7.jar"
+  )
 
 # Get Kontakt credentials
 kontakt <-
   config::get("kontakt",
-              file = "C:\\Users\\PoorJ\\Projects\\config.yml")
+    file = "C:\\Users\\PoorJ\\Projects\\config.yml"
+  )
 
 # Open connection
 jdbcConnection <-
@@ -111,9 +114,11 @@ write.csv(
 
 
 termek <- group_by(t_fuggo, TERMCSOP) %>%
-  summarize(DARAB = round(length(F_IVK), 0),
-            ELTELT_MNAP = round(mean(ERK_MNAP), 2)) %>%
-  gather(MUTATÓ,  ÉRTÉK, DARAB:ELTELT_MNAP)
+  summarize(
+    DARAB = round(length(F_IVK), 0),
+    ELTELT_MNAP = round(mean(ERK_MNAP), 2)
+  ) %>%
+  gather(MUTATÓ, ÉRTÉK, DARAB:ELTELT_MNAP)
 
 write.csv(
   termek,
@@ -123,9 +128,11 @@ write.csv(
 
 
 status <- group_by(t_fuggo, TERMCSOP, KECS_PG) %>%
-  summarize(DARAB = round(length(F_IVK), 0),
-            ELTELT_MNAP = round(mean(ERK_MNAP), 2)) %>%
-  gather(MUTATÓ,  ÉRTÉK, DARAB:ELTELT_MNAP)
+  summarize(
+    DARAB = round(length(F_IVK), 0),
+    ELTELT_MNAP = round(mean(ERK_MNAP), 2)
+  ) %>%
+  gather(MUTATÓ, ÉRTÉK, DARAB:ELTELT_MNAP)
 
 write.csv(
   status,
@@ -136,8 +143,10 @@ write.csv(
 
 # Page 2: status
 status_kecs_main <- group_by(t_fuggo, KECS_PG) %>%
-  summarize(DARAB = round(length(F_IVK), 0),
-            ELTELT_MNAP = round(mean(ERK_MNAP), 2))
+  summarize(
+    DARAB = round(length(F_IVK), 0),
+    ELTELT_MNAP = round(mean(ERK_MNAP), 2)
+  )
 
 write.csv(
   status_kecs_main,
@@ -150,10 +159,12 @@ write.csv(
 
 
 status_varak <-
-  group_by(t_fuggo[t_fuggo$KECS_PG == "Várakozó",], TERMCSOP, KECS) %>%
-  summarize(DARAB = round(length(F_IVK), 0),
-            ELTELT_MNAP = round(mean(ERK_MNAP), 2)) %>%
-  gather(MUTATÓ,  ÉRTÉK, DARAB:ELTELT_MNAP)
+  group_by(t_fuggo[t_fuggo$KECS_PG == "Várakozó", ], TERMCSOP, KECS) %>%
+  summarize(
+    DARAB = round(length(F_IVK), 0),
+    ELTELT_MNAP = round(mean(ERK_MNAP), 2)
+  ) %>%
+  gather(MUTATÓ, ÉRTÉK, DARAB:ELTELT_MNAP)
 
 write.csv(
   status_varak,
@@ -166,10 +177,12 @@ write.csv(
 
 
 status_foly <-
-  group_by(t_fuggo[t_fuggo$KECS_PG == "Folyamatban",], TERMCSOP, KECS) %>%
-  summarize(DARAB = round(length(F_IVK), 0),
-            ELTELT_MNAP = round(mean(ERK_MNAP), 2)) %>%
-  gather(MUTATÓ,  ÉRTÉK, DARAB:ELTELT_MNAP)
+  group_by(t_fuggo[t_fuggo$KECS_PG == "Folyamatban", ], TERMCSOP, KECS) %>%
+  summarize(
+    DARAB = round(length(F_IVK), 0),
+    ELTELT_MNAP = round(mean(ERK_MNAP), 2)
+  ) %>%
+  gather(MUTATÓ, ÉRTÉK, DARAB:ELTELT_MNAP)
 
 write.csv(
   status_foly,
@@ -225,36 +238,45 @@ write.csv(
 # Volumes: incoming & processed #########################################################
 #########################################################################################
 
-#Transform
-dataclear <- function(x) {
+# Transform
+dataclear <- function(x, period = "M") {
+  # Setting period
+  # M: one month
+  # H: six months
   x$NAP <- ymd_hms(x$NAP)
-  x <-
-    x[!month(x$NAP) < month(floor_date(Sys.Date())) - 2, ] # exclude previous period
+
+  # Define time span
+  if (period == "M") {
+    x <- x %>% filter(NAP >= Sys.Date() - 30)
+  } else if (period == "H") {
+    x <- x %>% filter(NAP >= Sys.Date() - 180)
+  }
+
   x <- x[!day(x$NAP) == day(Sys.Date()), ] # exclude sysdate
-  #x <- x[!weekdays(x$NAP) %in% c("szombat", "vasárnap"),] # exclude weekend
   x$NAP <- as.character(x$NAP)
   x[is.na(x)] <- "Ismeretlen"
-  return(x) #MUST RETURN X, OR DATAFRAME IS REDUCED TO ATOMIC VECTOR!!!
+  return(x)
 }
 
-
+# Gen one month daily data
 forg <-
-  group_by(dataclear(t_forgalom), TIPUS, NAP, KOTVENYESITES) %>%
+  group_by(dataclear(t_forgalom, "M"), TIPUS, NAP, KOTVENYESITES) %>%
   summarize(DARAB = sum(DARAB))
-forg[forg$TIPUS == 'ERKEZETT', "TIPUS"] <- "Beérkezett"
-forg[forg$TIPUS == 'LEZART', "TIPUS"] <- "Kötvényesített"
+forg[forg$TIPUS == "ERKEZETT", "TIPUS"] <- "Beérkezett"
+forg[forg$TIPUS == "LEZART", "TIPUS"] <- "Kötvényesített"
 
 write.csv(forg,
-          here::here("Data", "forg.csv"),
-          row.names = FALSE)
+  here::here("Data", "forg.csv"),
+  row.names = FALSE
+)
 
 
 forg_termcsop <-
-  group_by(dataclear(t_forgalom), TIPUS, NAP, KOTVENYESITES, F_TERMCSOP) %>%
+  group_by(dataclear(t_forgalom, "M"), TIPUS, NAP, KOTVENYESITES, F_TERMCSOP) %>%
   summarize(DARAB = sum(DARAB))
-forg_termcsop[forg_termcsop$TIPUS == 'ERKEZETT', "TIPUS"] <-
+forg_termcsop[forg_termcsop$TIPUS == "ERKEZETT", "TIPUS"] <-
   "Beérkezett"
-forg_termcsop[forg_termcsop$TIPUS == 'LEZART', "TIPUS"] <-
+forg_termcsop[forg_termcsop$TIPUS == "LEZART", "TIPUS"] <-
   "Kötvényesített"
 
 write.csv(
@@ -264,14 +286,44 @@ write.csv(
 )
 
 
+# Gen six month weekly data
+forg_weekly <- dataclear(t_forgalom, "H") %>%
+  mutate(HET = paste0(year(NAP), "/", ifelse(week(NAP) < 10, paste0("0", week(NAP)), week(NAP)))) %>%
+  group_by(TIPUS, HET, KOTVENYESITES) %>%
+  summarize(DARAB = sum(DARAB))
+
+forg_weekly[forg_weekly$TIPUS == "ERKEZETT", "TIPUS"] <- "Beérkezett"
+forg_weekly[forg_weekly$TIPUS == "LEZART", "TIPUS"] <- "Kötvényesített"
+
+write.csv(forg_weekly,
+  here::here("Data", "forg_weekly.csv"),
+  row.names = FALSE
+)
+
+
+forg_termcsop_weekly <- dataclear(t_forgalom, "H") %>%
+  mutate(HET = paste0(year(NAP), "/", ifelse(week(NAP) < 10, paste0("0", week(NAP)), week(NAP)))) %>%
+  group_by(TIPUS, HET, KOTVENYESITES, F_TERMCSOP) %>%
+  summarize(DARAB = sum(DARAB))
+  
+forg_termcsop_weekly[forg_termcsop_weekly$TIPUS == "ERKEZETT", "TIPUS"] <- "Beérkezett"
+forg_termcsop_weekly[forg_termcsop_weekly$TIPUS == "LEZART", "TIPUS"] <- "Kötvényesített"
+
+write.csv(
+  forg_termcsop_weekly,
+  here::here("Data", "forg_term_weekly.csv"),
+  row.names = FALSE
+)
+
+
 #########################################################################################
 # Workout ###############################################################################
 #########################################################################################
 
 workout <-
-  group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT",]), NAP, F_KECS_PG) %>%
+  group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT", ]), NAP, F_KECS_PG) %>%
   summarize(DARAB = sum(DARAB))
-workout[workout$F_KECS_PG %in% c('Feldolgozandó', "Feldogozandó"), "F_KECS_PG"] <-
+workout[workout$F_KECS_PG %in% c("Feldolgozandó", "Feldogozandó"), "F_KECS_PG"] <-
   "Folyamatban"
 
 write.csv(
@@ -282,9 +334,9 @@ write.csv(
 
 
 workout_term <-
-  group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT",]), NAP, F_TERMCSOP, F_KECS_PG) %>%
+  group_by(dataclear(t_forgalom[t_forgalom$TIPUS == "ERKEZETT", ]), NAP, F_TERMCSOP, F_KECS_PG) %>%
   summarize(DARAB = sum(DARAB))
-workout_term[workout_term$F_KECS_PG %in% c('Feldolgozandó', "Feldogozandó"), "F_KECS_PG"] <-
+workout_term[workout_term$F_KECS_PG %in% c("Feldolgozandó", "Feldogozandó"), "F_KECS_PG"] <-
   "Folyamatban"
 
 write.csv(
@@ -299,7 +351,7 @@ write.csv(
 # Efficiency Metrics ####################################################################
 #########################################################################################
 
-#tch, closed, cklido transform
+# tch, closed, cklido transform
 t_touch$NAP <- floor_date(ymd_hms(t_touch$NAP), "day")
 t_close$NAP <- floor_date(ymd_hms(t_close$NAP), "day")
 t_ctime$NAP <- floor_date(ymd_hms(t_ctime$NAP), "day")
