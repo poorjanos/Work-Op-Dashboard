@@ -14,7 +14,6 @@
                  AND a.f_alirattipusid = x.f_alirattipusid
                  AND UPPER (kontakt.basic.get_userid_login (a.f_userid)) NOT IN
                           ('MARKIB', 'SZERENCSEK')
-                 --AND kontakt.basic.get_userid_kiscsoport (a.f_userid) IS NOT NULL
                  AND x.f_lean_tip = 'AL'
                  AND b.f_termcsop IS NOT NULL
       GROUP BY   TRUNC (a.f_int_begin, 'ddd'), b.f_termcsop
