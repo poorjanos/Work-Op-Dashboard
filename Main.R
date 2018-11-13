@@ -42,25 +42,23 @@ jdbcDriver <-
     classPath = "C:\\Users\\PoorJ\\Desktop\\ojdbc7.jar"
   )
 
-# Get Kontakt credentials
+# Get  credentials
 kontakt <-
   config::get("kontakt",
     file = "C:\\Users\\PoorJ\\Projects\\config.yml"
   )
 
-# Open connection
-jdbcConnection <-
-  dbConnect(
-    jdbcDriver,
-    url = kontakt$server,
-    user = kontakt$uid,
-    password = kontakt$pwd
+datamnr <-
+  config::get("datamnr",
+    file = "C:\\Users\\PoorJ\\Projects\\config.yml"
   )
 
-# Get SQL scripts
+# Define SQL parser
 readQuery <-
   function(file)
     paste(readLines(file, warn = FALSE), collapse = "\n")
+
+# Get SQL scripts
 forg <-
   readQuery(here::here("SQL", "forgalom.sql"))
 fuggo <-
@@ -74,18 +72,40 @@ close <-
 ctime <-
   readQuery(here::here("SQL", "ctime.sql"))
 
-# Run queries
+# Open connection Kontakt
+jdbcConnection <-
+  dbConnect(
+    jdbcDriver,
+    url = kontakt$server,
+    user = kontakt$uid,
+    password = kontakt$pwd
+  )
+
+# Run queries Kontakt
 t_forgalom <- dbGetQuery(jdbcConnection, forg)
-t_fuggo <- dbGetQuery(jdbcConnection, fuggo)
-t_fuggo_history <- dbGetQuery(jdbcConnection, fuggo_history)
 t_touch <- dbGetQuery(jdbcConnection, touch)
 t_close <- dbGetQuery(jdbcConnection, close)
 t_ctime <- dbGetQuery(jdbcConnection, ctime)
 
-# Close connection
+# Close connection Kontakt
 dbDisconnect(jdbcConnection)
 
 
+# Open connection Datamnr
+jdbcConnection <-
+  dbConnect(
+    jdbcDriver,
+    url = datamnr$server,
+    user = datamnr$uid,
+    password = datamnr$pwd
+  )
+
+# Run queries Datamnr
+t_fuggo <- dbGetQuery(jdbcConnection, fuggo)
+t_fuggo_history <- dbGetQuery(jdbcConnection, fuggo_history)
+
+# Close connection Datamnr
+dbDisconnect(jdbcConnection)
 
 #########################################################################################
 # Compute Pending Volume Metrics ########################################################
@@ -203,9 +223,7 @@ t_fuggo_history$DATUM <-
 
 fuggo_hist <- group_by(t_fuggo_history, DATUM, KECS_PG) %>%
   summarize(
-    DARAB = length(F_IVK),
-    ELTELT_MNAP_ATL = round(mean(ERK_MNAP), 2),
-    ELTELT_MNAP_MED = round(median(ERK_MNAP), 2)
+    DARAB = length(F_IVK)
   )
 
 write.csv(
@@ -218,9 +236,7 @@ write.csv(
 fuggo_hist_term <-
   group_by(t_fuggo_history, DATUM, KECS_PG, TERMCSOP) %>%
   summarize(
-    DARAB = length(F_IVK),
-    ELTELT_MNAP_ATL = round(mean(ERK_MNAP), 2),
-    ELTELT_MNAP_MED = round(median(ERK_MNAP), 2)
+    DARAB = length(F_IVK)
   )
 
 write.csv(
